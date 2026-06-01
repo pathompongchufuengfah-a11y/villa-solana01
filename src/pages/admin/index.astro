@@ -11,25 +11,29 @@ const filter = (url.searchParams.get('status') ?? 'all') as BookingStatus | 'all
 let bookings: Booking[] = [];
 let dbError = '';
 const configured = supabaseConfigured();
+const counts: Record<string, number> = { all: 0, pending: 0, confirmed: 0, cancelled: 0 };
 
 if (configured) {
-  const supabase = getSupabaseAdmin()!;
-  let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
-  if (filter !== 'all') query = query.eq('status', filter);
-  const { data, error } = await query;
-  if (error) dbError = error.message;
-  else bookings = (data as Booking[]) ?? [];
-}
+  try {
+    const supabase = getSupabaseAdmin()!;
+    let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
+    if (filter !== 'all') query = query.eq('status', filter);
+    const { data, error } = await query;
+    if (error) dbError = error.message;
+    else bookings = (data as Booking[]) ?? [];
 
-// Counts for the filter tabs (cheap second query; small table).
-const counts: Record<string, number> = { all: 0, pending: 0, confirmed: 0, cancelled: 0 };
-if (configured && !dbError) {
-  const supabase = getSupabaseAdmin()!;
-  const { data } = await supabase.from('bookings').select('status');
-  (data ?? []).forEach((r: { status: string }) => {
-    counts.all++;
-    counts[r.status] = (counts[r.status] ?? 0) + 1;
-  });
+    // Counts for the filter tabs (cheap second query; small table).
+    if (!dbError) {
+      const { data: all } = await supabase.from('bookings').select('status');
+      (all ?? []).forEach((r: { status: string }) => {
+        counts.all++;
+        counts[r.status] = (counts[r.status] ?? 0) + 1;
+      });
+    }
+  } catch (e: any) {
+    // Most often a bad SUPABASE_URL (don't include /rest/v1/) or wrong key.
+    dbError = e?.message ?? 'Could not reach Supabase. Check SUPABASE_URL (base URL, no /rest/v1/) and that the key is the service_role key.';
+  }
 }
 
 const tabs: { key: BookingStatus | 'all'; label: string }[] = [
