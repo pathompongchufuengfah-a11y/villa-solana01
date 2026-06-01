@@ -1,4 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+// Node < 22 has no global WebSocket. supabase-js wires up a Realtime client on
+// creation and needs one — even though we only ever make REST queries. Provide
+// the `ws` implementation so client init doesn't throw on Vercel's Node 20.
+import WebSocket from 'ws';
 
 export interface Booking {
   id: string;
@@ -34,5 +38,6 @@ export function getSupabaseAdmin(): SupabaseClient | null {
   if (!url || !key) return null;
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: WebSocket as any },
   });
 }
