@@ -1,0 +1,256 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+import { getSupabaseAdmin, supabaseConfigured, type Booking, type BookingStatus } from '../../lib/supabase';
+
+// Middleware already guaranteed a valid session before we get here.
+const url = new URL(Astro.request.url);
+const filter = (url.searchParams.get('status') ?? 'all') as BookingStatus | 'all';
+
+let bookings: Booking[] = [];
+let dbError = '';
+const configured = supabaseConfigured();
+
+if (configured) {
+  const supabase = getSupabaseAdmin()!;
+  let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
+  if (filter !== 'all') query = query.eq('status', filter);
+  const { data, error } = await query;
+  if (error) dbError = error.message;
+  else bookings = (data as Booking[]) ?? [];
+}
+
+// Counts for the filter tabs (cheap second query; small table).
+const counts: Record<string, number> = { all: 0, pending: 0, confirmed: 0, cancelled: 0 };
+if (configured && !dbError) {
+  const supabase = getSupabaseAdmin()!;
+  const { data } = await supabase.from('bookings').select('status');
+  (data ?? []).forEach((r: { status: string }) => {
+    counts.all++;
+    counts[r.status] = (counts[r.status] ?? 0) + 1;
+  });
+}
+
+const tabs: { key: BookingStatus | 'all'; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'pending', label: 'Pending' },
+  { key: 'confirmed', label: 'Confirmed' },
+  { key: 'cancelled', label: 'Cancelled' },
+];
+
+const badge: Record<BookingStatus, string> = {
+  pending: 'bg-amber-100 text-amber-800',
+  confirmed: 'bg-ocean-700/12 text-ocean-700',
+  cancelled: 'bg-red-100 text-red-700',
+};
+
+const fmtDate = (s: string) =>
+  new Date(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtMoney = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleString());
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Booking queue · Villa Solana</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@300;400;500;600&display=swap" />
+  </head>
+  <body class="bg-cream-100/40 text-ink min-h-screen">
+    <header class="bg-cream-50 border-b hairline sticky top-0 z-20">
+      <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-full bg-ocean-700 text-cream-50 grid place-items-center font-display text-[15px]">S</span>
+          <span class="font-display text-[20px]">Booking queue</span>
+        </div>
+        <div class="flex items-center gap-4 text-[13px]">
+          <a href="/" class="text-ink-mute hover:text-ink">View site ↗</a>
+          <form method="POST" action="/api/admin/logout">
+            <button class="text-ocean-700 hover:text-ocean-800">Sign out</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-5 sm:px-8 py-8">
+      {!configured && (
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-5 text-sm">
+          <strong>Supabase isn’t configured.</strong> Set <code>SUPABASE_URL</code> and
+          <code>SUPABASE_SERVICE_ROLE_KEY</code>, run <code>supabase/schema.sql</code>, then reload.
+        </div>
+      )}
+
+      {configured && dbError && (
+        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-5 text-sm">
+          Database error: {dbError}. Did you run <code>supabase/schema.sql</code>?
+        </div>
+      )}
+
+      {configured && !dbError && (
+        <>
+          {/* Stats */}
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {tabs.map((tb) => (
+              <a
+                href={tb.key === 'all' ? '/admin' : `/admin?status=${tb.key}`}
+                class={`rounded-xl border p-4 transition ${filter === tb.key ? 'bg-ocean-700 text-cream-50 border-ocean-700' : 'bg-cream-50 hairline hover:bg-cream-100/60'}`}
+              >
+                <div class={`text-[11px] tracking-eyebrow uppercase ${filter === tb.key ? 'text-cream-100/80' : 'text-ink-mute'}`}>{tb.label}</div>
+                <div class="font-display text-3xl mt-1">{counts[tb.key] ?? 0}</div>
+              </a>
+            ))}
+          </div>
+
+          {/* Table */}
+          <div class="mt-6 bg-cream-50 rounded-2xl border hairline overflow-hidden">
+            {bookings.length === 0 ? (
+              <div class="p-12 text-center text-ink-mute">No bookings{filter !== 'all' ? ` with status “${filter}”` : ''} yet.</div>
+            ) : (
+              <div class="overflow-x-auto">
+                <table class="w-full text-[14px]">
+                  <thead>
+                    <tr class="text-left text-[11px] tracking-eyebrow uppercase text-ink-mute border-b hairline">
+                      <th class="py-3 px-4 font-medium">Guest</th>
+                      <th class="py-3 px-4 font-medium">Dates</th>
+                      <th class="py-3 px-4 font-medium">Pax</th>
+                      <th class="py-3 px-4 font-medium">Total</th>
+                      <th class="py-3 px-4 font-medium">Status</th>
+                      <th class="py-3 px-4 font-medium text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookings.map((b) => (
+                      <tr class="border-b hairline last:border-0 align-top hover:bg-cream-100/40">
+                        <td class="py-4 px-4">
+                          <div class="font-medium">{b.name}</div>
+                          <div class="text-ink-mute text-[12.5px]">{b.email}</div>
+                          {b.whatsapp && <div class="text-ink-mute text-[12.5px]">+{b.whatsapp}</div>}
+                          {b.notes && <div class="text-ink-mute text-[12px] mt-1 max-w-xs italic">“{b.notes}”</div>}
+                        </td>
+                        <td class="py-4 px-4 whitespace-nowrap">
+                          <div>{fmtDate(b.checkin)}</div>
+                          <div class="text-ink-mute">→ {fmtDate(b.checkout)}</div>
+                          <div class="text-ink-mute text-[12px]">{b.nights ?? '—'} nights</div>
+                        </td>
+                        <td class="py-4 px-4">{b.guests}</td>
+                        <td class="py-4 px-4 whitespace-nowrap">{fmtMoney(b.total)}</td>
+                        <td class="py-4 px-4">
+                          <span class={`inline-block text-[11px] tracking-eyebrow uppercase px-2.5 py-1 rounded-full ${badge[b.status]}`}>{b.status}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                          <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                            {b.status !== 'confirmed' && (
+                              <button data-act="set_status" data-status="confirmed" data-id={b.id} class="text-[12px] px-2.5 py-1.5 rounded-md bg-ocean-700 text-cream-50 hover:bg-ocean-800">Confirm</button>
+                            )}
+                            {b.status !== 'cancelled' && (
+                              <button data-act="set_status" data-status="cancelled" data-id={b.id} class="text-[12px] px-2.5 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100">Cancel</button>
+                            )}
+                            {b.status !== 'pending' && (
+                              <button data-act="set_status" data-status="pending" data-id={b.id} class="text-[12px] px-2.5 py-1.5 rounded-md bg-cream-100 text-ink-soft hover:bg-cream-200">Reset</button>
+                            )}
+                            <button
+                              data-act="edit"
+                              data-id={b.id}
+                              data-json={JSON.stringify({ name: b.name, email: b.email, whatsapp: b.whatsapp ?? '', checkin: b.checkin, checkout: b.checkout, guests: b.guests, total: b.total ?? '', notes: b.notes ?? '' })}
+                              class="text-[12px] px-2.5 py-1.5 rounded-md border hairline hover:bg-cream-100"
+                            >Edit</button>
+                            <button data-act="delete" data-id={b.id} class="text-[12px] px-2.5 py-1.5 rounded-md text-ink-mute hover:text-red-700">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </main>
+
+    {/* Edit modal */}
+    <dialog id="edit-dialog" class="rounded-2xl p-0 backdrop:bg-ink/40 w-[min(92vw,460px)]">
+      <form id="edit-form" method="dialog" class="p-6">
+        <h2 class="font-display text-2xl">Edit booking</h2>
+        <input type="hidden" name="id" />
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div class="col-span-2"><label class="label">Name</label><input name="name" class="field" required /></div>
+          <div class="col-span-2"><label class="label">Email</label><input name="email" type="email" class="field" required /></div>
+          <div class="col-span-2"><label class="label">WhatsApp</label><input name="whatsapp" class="field" /></div>
+          <div><label class="label">Check in</label><input name="checkin" type="date" class="field" required /></div>
+          <div><label class="label">Check out</label><input name="checkout" type="date" class="field" required /></div>
+          <div><label class="label">Guests</label><input name="guests" type="number" min="1" max="12" class="field" /></div>
+          <div><label class="label">Total (฿)</label><input name="total" type="number" class="field" /></div>
+          <div class="col-span-2"><label class="label">Notes</label><textarea name="notes" class="field"></textarea></div>
+        </div>
+        <div class="mt-5 flex items-center justify-end gap-2">
+          <button type="button" data-cancel class="text-[13px] px-4 py-2.5 rounded-full text-ink-mute hover:text-ink">Cancel</button>
+          <button type="submit" class="text-[13px] px-5 py-2.5 rounded-full bg-ocean-700 text-cream-50 hover:bg-ocean-800">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script is:inline>
+      const post = async (payload) => {
+        const res = await fetch('/api/admin/booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 401) { window.location.href = '/admin/login'; return false; }
+        return res.ok;
+      };
+
+      const dialog = document.getElementById('edit-dialog');
+      const editForm = document.getElementById('edit-form');
+
+      document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        const id = btn.dataset.id;
+
+        if (act === 'set_status') {
+          btn.disabled = true;
+          const ok = await post({ action: 'set_status', id, status: btn.dataset.status });
+          if (ok) location.reload(); else btn.disabled = false;
+        }
+
+        if (act === 'delete') {
+          if (!confirm('Delete this booking permanently?')) return;
+          const ok = await post({ action: 'delete', id });
+          if (ok) location.reload();
+        }
+
+        if (act === 'edit') {
+          const data = JSON.parse(btn.dataset.json);
+          editForm.id.value = id;
+          for (const k of ['name', 'email', 'whatsapp', 'checkin', 'checkout', 'guests', 'total', 'notes']) {
+            if (editForm[k]) editForm[k].value = data[k] ?? '';
+          }
+          dialog.showModal();
+        }
+      });
+
+      editForm.querySelector('[data-cancel]').addEventListener('click', () => dialog.close());
+
+      editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(editForm);
+        const payload = { action: 'update', id: fd.get('id') };
+        for (const k of ['name', 'email', 'whatsapp', 'checkin', 'checkout', 'notes']) payload[k] = fd.get(k);
+        payload.guests = Number(fd.get('guests')) || 1;
+        const total = fd.get('total');
+        payload.total = total === '' ? null : Number(total);
+        const ok = await post(payload);
+        if (ok) location.reload();
+      });
+    </script>
+  </body>
+</html>

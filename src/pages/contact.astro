@@ -1,0 +1,94 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeading from '@components/SectionHeading.astro';
+import Icon from '@components/Icon.astro';
+import { useT, getLangFromUrl } from '@i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useT(lang);
+
+const wa = import.meta.env.PUBLIC_WHATSAPP_NUMBER ?? '66812345678';
+const line = import.meta.env.PUBLIC_LINE_ID ?? '@villasolana';
+const calendly = import.meta.env.PUBLIC_CALENDLY_URL;
+---
+
+<BaseLayout
+  title="Contact — Villa Solana Phuket"
+  description="Talk to the owner of Villa Solana directly. WhatsApp, LINE, email — usually under 2 hours."
+>
+  <section class="pt-32 sm:pt-40 pb-24 bg-cream-50">
+    <div class="max-w-3xl mx-auto px-5 sm:px-8">
+      <SectionHeading
+        eyebrow={t('contact.eyebrow')}
+        title={t('contact.title')}
+        sub={t('contact.sub')}
+        align="center"
+        class="mx-auto"
+      />
+
+      <div class="mt-12 grid sm:grid-cols-2 gap-4">
+        <a
+          href={`https://wa.me/${wa}`}
+          target="_blank"
+          rel="noopener"
+          class="flex items-center gap-4 p-5 rounded-2xl bg-cream-100/60 border hairline hover:bg-cream-100 transition"
+        >
+          <span class="w-11 h-11 rounded-full bg-[#25D366]/15 text-[#128C7E] grid place-items-center"><Icon name="wa" class="w-6 h-6" /></span>
+          <span>
+            <span class="block text-[11px] tracking-eyebrow uppercase text-ink-mute">{t('contact.whatsapp')}</span>
+            <span class="block font-display text-xl text-ink">+{wa}</span>
+          </span>
+        </a>
+
+        <a
+          href={`https://line.me/R/ti/p/${line}`}
+          target="_blank"
+          rel="noopener"
+          class="flex items-center gap-4 p-5 rounded-2xl bg-cream-100/60 border hairline hover:bg-cream-100 transition"
+        >
+          <span class="w-11 h-11 rounded-full bg-[#06C755]/15 text-[#06C755] grid place-items-center"><Icon name="line" class="w-6 h-6" /></span>
+          <span>
+            <span class="block text-[11px] tracking-eyebrow uppercase text-ink-mute">{t('contact.line')}</span>
+            <span class="block font-display text-xl text-ink">{line}</span>
+          </span>
+        </a>
+
+        <a
+          href="mailto:stay@villasolana.example"
+          class="flex items-center gap-4 p-5 rounded-2xl bg-cream-100/60 border hairline hover:bg-cream-100 transition"
+        >
+          <span class="w-11 h-11 rounded-full bg-ocean-700/15 text-ocean-700 grid place-items-center"><Icon name="mail" class="w-6 h-6" /></span>
+          <span>
+            <span class="block text-[11px] tracking-eyebrow uppercase text-ink-mute">{t('contact.email')}</span>
+            <span class="block font-display text-xl text-ink">stay@villasolana.example</span>
+          </span>
+        </a>
+
+        <a
+          href="tel:+6681234567"
+          class="flex items-center gap-4 p-5 rounded-2xl bg-cream-100/60 border hairline hover:bg-cream-100 transition"
+        >
+          <span class="w-11 h-11 rounded-full bg-ocean-700/15 text-ocean-700 grid place-items-center"><Icon name="phone" class="w-6 h-6" /></span>
+          <span>
+            <span class="block text-[11px] tracking-eyebrow uppercase text-ink-mute">{t('contact.phone')}</span>
+            <span class="block font-display text-xl text-ink">+66 6X XXX XXXX</span>
+          </span>
+        </a>
+      </div>
+
+      {calendly && (
+        <div class="mt-14 text-center">
+          <p class="text-ink-mute text-sm">{t('book.fallback')}</p>
+          <a
+            href={calendly}
+            target="_blank"
+            rel="noopener"
+            class="mt-3 inline-flex items-center gap-2 bg-ocean-700 hover:bg-ocean-800 text-cream-50 pl-6 pr-5 py-3 rounded-full text-[13px] tracking-wide transition"
+          >
+            {t('book.calendly')} <Icon name="arrow" class="w-3.5 h-3.5" />
+          </a>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

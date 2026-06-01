@@ -1,0 +1,21 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  icon: 'pool' | 'wifi' | 'ac' | 'kitchen' | 'car' | 'bbq';
+  title: string;
+  description: string;
+}
+
+const { icon, title, description } = Astro.props;
+---
+
+<div class="group bg-cream-50 p-7 sm:p-9 flex items-start gap-4 transition-colors hover:bg-cream-100/50">
+  <div class="w-11 h-11 rounded-full bg-ocean-700/10 text-ocean-700 grid place-items-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
+    <Icon name={icon} class="w-6 h-6" />
+  </div>
+  <div>
+    <div class="font-display text-[22px] leading-tight text-ink">{title}</div>
+    <div class="text-ink-mute text-[13.5px] mt-1">{description}</div>
+  </div>
+</div>

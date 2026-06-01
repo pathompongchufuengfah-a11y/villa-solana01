@@ -1,0 +1,53 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeading from '@components/SectionHeading.astro';
+import AmenityCard from '@components/AmenityCard.astro';
+import { useT, getLangFromUrl } from '@i18n/utils';
+import { ui } from '@i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useT(lang);
+const items = t<typeof ui.en.amen.items>('amen.items');
+const extras = t<typeof ui.en.amenExtras.list>('amenExtras.list');
+---
+
+<BaseLayout
+  title="Amenities — Villa Solana Phuket"
+  description="Everything included in your stay at Villa Solana — pool, kitchen, Wi-Fi, parking, BBQ, and the little extras."
+>
+  <section class="pt-32 sm:pt-40 pb-12 bg-cream-50">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <SectionHeading
+        eyebrow={t('amen.eyebrow')}
+        title={t('amen.title')}
+        sub={t('amenExtras.sub')}
+      />
+    </div>
+  </section>
+
+  <section class="reveal pb-24 bg-cream-50">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-px bg-ink/10 rounded-2xl overflow-hidden border hairline">
+        {items.map((a) => <AmenityCard icon={a.i as any} title={a.t} description={a.d} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal py-24 bg-cream-100/60">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 grid md:grid-cols-12 gap-10">
+      <div class="md:col-span-4">
+        <SectionHeading eyebrow={t('amenExtras.eyebrow')} title={t('amenExtras.title')} />
+      </div>
+      <div class="md:col-span-8">
+        <ul class="grid sm:grid-cols-2 gap-x-10 gap-y-3 text-[15px] text-ink-soft">
+          {extras.map((x) => (
+            <li class="flex items-start gap-3 py-2 border-b hairline">
+              <span class="mt-1 w-1.5 h-1.5 rounded-full bg-ocean-700 shrink-0"></span>
+              <span>{x}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,94 @@
+---
+import Icon from './Icon.astro';
+import { useT, localizedHref, type Lang } from '@i18n/utils';
+
+interface Props {
+  lang: Lang;
+  /** Override default hero image. Pass an imported asset for best optimization. */
+  image?: string;
+}
+
+const {
+  lang,
+  image = 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=2000&q=80',
+} = Astro.props;
+
+const t = useT(lang);
+const ctaHref = localizedHref('/booking', lang);
+const galleryHref = localizedHref('/#gallery', lang);
+const title = t<string>('hero.title') ?? '';
+---
+
+<section id="top" class="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
+  <div class="absolute inset-0">
+    <img
+      src={image}
+      alt="Villa Solana pool at dusk"
+      class="w-full h-full object-cover kenburn"
+      fetchpriority="high"
+      decoding="async"
+      width="2000"
+      height="1333"
+    />
+    <div class="absolute inset-0 bg-gradient-to-b from-ocean-800/60 via-ocean-800/20 to-ocean-800/70"></div>
+  </div>
+
+  <div class="relative h-full max-w-7xl mx-auto px-5 sm:px-8 flex flex-col">
+    <div class="flex-1"></div>
+    <div class="max-w-3xl pb-16 sm:pb-24 text-cream-50">
+      <div class="flex items-center gap-3 text-[11px] tracking-eyebrow uppercase text-cream-100/90 mb-5">
+        <span class="w-8 h-px bg-cream-100/70"></span>
+        <span>{t('hero.eyebrow')}</span>
+      </div>
+      <h1 class="font-display font-medium text-[44px] sm:text-[64px] md:text-[78px] leading-[1.02] tracking-tight whitespace-pre-line">
+        {title}
+      </h1>
+      <p class="mt-6 text-cream-100/90 text-[16px] sm:text-[17px] max-w-xl leading-relaxed">
+        {t('hero.sub')}
+      </p>
+      <div class="mt-9 flex flex-wrap items-center gap-4">
+        <a
+          href={ctaHref}
+          class="inline-flex items-center gap-2.5 bg-cream-50 text-ocean-800 hover:bg-white pl-6 pr-5 py-3.5 rounded-full text-[14px] tracking-wide transition group"
+        >
+          {t('hero.cta')}
+          <span class="w-7 h-7 rounded-full bg-ocean-700 text-cream-50 grid place-items-center group-hover:translate-x-0.5 transition">
+            <Icon name="arrow" class="w-3.5 h-3.5" />
+          </span>
+        </a>
+        <a href={galleryHref} class="text-cream-50/95 text-[13px] tracking-wide underline-offset-4 hover:underline">
+          {t('nav.gallery')} →
+        </a>
+      </div>
+      <p class="mt-8 text-[12px] tracking-eyebrow uppercase text-cream-100/80">{t('hero.meta')}</p>
+    </div>
+  </div>
+
+  <a href="#why" aria-label="Scroll down" class="hidden sm:flex absolute bottom-7 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-cream-100/70 hover:text-cream-50 transition">
+    <span class="w-px h-8 bg-cream-100/40"></span>
+    <span class="float-cue grid place-items-center">
+      <Icon name="chev" class="w-5 h-5" />
+    </span>
+  </a>
+
+  <aside class="hidden lg:block absolute bottom-10 right-8 w-72 bg-cream-50/95 backdrop-blur rounded-xl shadow-soft p-5" aria-label="Direct rate">
+    <div class="flex items-baseline justify-between">
+      <span class="text-[11px] tracking-eyebrow uppercase text-ink-mute">{t('hero.directRate')}</span>
+      <span class="text-[11px] tracking-eyebrow uppercase text-ocean-700">{t('hero.vsOta')}</span>
+    </div>
+    <div class="mt-1 flex items-baseline gap-2">
+      <span class="font-display text-4xl text-ink"><span data-countup="8500" data-prefix="฿">฿8,500</span></span>
+      <span class="text-ink-mute text-sm">{t('hero.perNight')}</span>
+    </div>
+    <div class="mt-2 flex items-center gap-1 text-amber-600">
+      {Array.from({ length: 5 }).map(() => <Icon name="star" class="w-3.5 h-3.5" />)}
+      <span class="ml-1 text-[12px] text-ink-mute">{t('hero.reviews')}</span>
+    </div>
+    <a
+      href={ctaHref}
+      class="mt-3 block text-center bg-ocean-700 hover:bg-ocean-800 text-cream-50 rounded-full py-2.5 text-[13px] tracking-wide transition"
+    >
+      {t('hero.cta')}
+    </a>
+  </aside>
+</section>

@@ -1,0 +1,179 @@
+---
+import '../styles/global.css';
+import Header from '@components/Header.astro';
+import Footer from '@components/Footer.astro';
+import WhatsAppFloat from '@components/WhatsAppFloat.astro';
+import { getLangFromUrl, useT, type Lang } from '@i18n/utils';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = 'Villa Solana Phuket — Private Pool Villa in Chalong',
+  description = 'A quiet three-bedroom pool villa in Chalong, Phuket. Stay direct and save 15% vs OTAs.',
+  image = '/og.jpg',
+  noindex = false,
+} = Astro.props;
+
+const lang: Lang = getLangFromUrl(Astro.url);
+const t = useT(lang);
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
+const ogImage = new URL(image, Astro.site ?? Astro.url.origin).toString();
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LodgingBusiness',
+  name: 'Villa Solana Phuket',
+  description,
+  url: Astro.site?.toString() ?? Astro.url.origin,
+  image: ogImage,
+  priceRange: '฿฿',
+  telephone: '+66-6X-XXX-XXXX',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Soi Ta-iad',
+    addressLocality: 'Chalong',
+    addressRegion: 'Phuket',
+    postalCode: '83130',
+    addressCountry: 'TH',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 7.8421,
+    longitude: 98.3450,
+  },
+  amenityFeature: [
+    { '@type': 'LocationFeatureSpecification', name: 'Private pool', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'Free Wi-Fi', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'Air conditioning', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'Free parking', value: true },
+  ],
+  starRating: { '@type': 'Rating', ratingValue: '4.92' },
+  numberOfRooms: 3,
+};
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    <link rel="canonical" href={canonical} />
+
+    {/* Open Graph */}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang} />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {/* Icons */}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    {/* Fonts — preconnect + non-render-blocking */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap"
+    />
+
+    {/* JSON-LD */}
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
+    {/* hreflang */}
+    {(['en', 'th', 'ru', 'zh'] as const).map((l) => (
+      <link
+        rel="alternate"
+        hreflang={l}
+        href={new URL(l === 'en' ? Astro.url.pathname : `/${l}${Astro.url.pathname}`, Astro.site ?? Astro.url.origin).toString()}
+      />
+    ))}
+  </head>
+  <body class="bg-cream-50 text-ink">
+    <div id="scroll-progress" aria-hidden="true"></div>
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:bg-cream-50 focus:px-3 focus:py-2 focus:rounded-md focus:shadow-soft">Skip to content</a>
+    <Header lang={lang} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+    <WhatsAppFloat />
+
+    {/* Reveal-on-scroll, stagger, count-up, scroll progress — tiny, no framework */}
+    <script>
+      (() => {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 1. Scroll progress bar
+        const bar = document.getElementById('scroll-progress');
+        if (bar && !reduce) {
+          const onScroll = () => {
+            const h = document.documentElement;
+            const max = h.scrollHeight - h.clientHeight;
+            bar.style.width = max > 0 ? (h.scrollTop / max) * 100 + '%' : '0%';
+          };
+          window.addEventListener('scroll', onScroll, { passive: true });
+          onScroll();
+        }
+
+        // 2. Count-up — runs when the element scrolls into view
+        const runCount = (el) => {
+          const target = Number(el.dataset.countup || '0');
+          const prefix = el.dataset.prefix || '';
+          const suffix = el.dataset.suffix || '';
+          if (reduce) { el.textContent = prefix + target.toLocaleString() + suffix; return; }
+          const dur = 1100;
+          const start = performance.now();
+          const tick = (now) => {
+            const p = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = prefix + Math.round(target * eased).toLocaleString() + suffix;
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        };
+
+        // 3. Reveal + stagger (one observer for everything)
+        const els = document.querySelectorAll('.reveal, .stagger, [data-countup]');
+        if (!('IntersectionObserver' in window) || !els.length) {
+          els.forEach((el) => { el.classList.add('in'); if (el.dataset.countup) runCount(el); });
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (!e.isIntersecting) return;
+              e.target.classList.add('in');
+              if (e.target.dataset.countup) runCount(e.target);
+              io.unobserve(e.target);
+            });
+          },
+          { threshold: 0.12 },
+        );
+        els.forEach((el) => io.observe(el));
+      })();
+    </script>
+  </body>
+</html>

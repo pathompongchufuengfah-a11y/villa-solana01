@@ -1,0 +1,211 @@
+---
+import Icon from './Icon.astro';
+import { useT, type Lang } from '@i18n/utils';
+
+interface Props {
+  lang: Lang;
+  /** Nightly rate in THB. */
+  rate?: number;
+  /** Endpoint for form submission. */
+  action?: string;
+}
+
+const {
+  lang,
+  rate = 8500,
+  action = '/api/booking',
+} = Astro.props;
+
+const t = useT(lang);
+const calendly = import.meta.env.PUBLIC_CALENDLY_URL;
+---
+
+<form
+  id="booking-form"
+  method="POST"
+  action={action}
+  data-rate={rate}
+  class="bg-cream-50 text-ink rounded-2xl p-6 sm:p-8 shadow-soft"
+>
+  <div data-booking-fields>
+    <div class="grid sm:grid-cols-3 gap-4">
+      <div>
+        <label class="label" for="bf-checkin">{t('book.checkin')}</label>
+        <input id="bf-checkin" name="checkin" class="field" type="date" required />
+      </div>
+      <div>
+        <label class="label" for="bf-checkout">{t('book.checkout')}</label>
+        <input id="bf-checkout" name="checkout" class="field" type="date" required />
+      </div>
+      <div>
+        <label class="label" for="bf-guests">{t('book.guests')}</label>
+        <select id="bf-guests" name="guests" class="field" required>
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <option value={n} selected={n === 2}>{n} guest{n > 1 ? 's' : ''}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4 mt-4">
+      <div>
+        <label class="label" for="bf-name">{t('book.name')}</label>
+        <input id="bf-name" name="name" class="field" placeholder="Anna Petrova" required autocomplete="name" />
+      </div>
+      <div>
+        <label class="label" for="bf-email">{t('book.email')}</label>
+        <input id="bf-email" name="email" type="email" class="field" placeholder="anna@example.com" required autocomplete="email" />
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label class="label" for="bf-whatsapp">{t('book.whatsapp')}</label>
+      <div class="flex items-stretch gap-2">
+        <span class="inline-flex items-center px-3.5 bg-cream-100 border hairline rounded-md text-ink-mute text-sm">+</span>
+        <input id="bf-whatsapp" name="whatsapp" class="field" placeholder="66 8X XXX XXXX" autocomplete="tel" />
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label class="label" for="bf-notes">{t('book.notes')}</label>
+      <textarea id="bf-notes" name="notes" class="field min-h-[88px] resize-y" placeholder="Airport pickup, dietary needs, anniversary, etc."></textarea>
+    </div>
+
+    {/* Honeypot — bots fill, humans don't see */}
+    <input type="text" name="company" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+
+    <div class="mt-6 flex items-center justify-between flex-wrap gap-4 border-t hairline pt-5">
+      <div class="text-sm text-ink-mute" data-booking-summary>
+        <span>Pick your dates to see total</span>
+      </div>
+      <button
+        type="submit"
+        data-booking-submit
+        disabled
+        class="inline-flex items-center gap-2.5 bg-ocean-700 hover:bg-ocean-800 text-cream-50 pl-6 pr-5 py-3.5 rounded-full text-[14px] tracking-wide transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span data-booking-submit-label>{t('book.submit')}</span>
+        <span class="w-7 h-7 rounded-full bg-cream-50 text-ocean-700 grid place-items-center">
+          <Icon name="arrow" class="w-3.5 h-3.5" />
+        </span>
+      </button>
+    </div>
+
+    {calendly && (
+      <div class="mt-5 text-center text-[12.5px] text-ink-mute">
+        {t('book.fallback')}{' '}
+        <a href={calendly} target="_blank" rel="noopener" class="text-ocean-700 underline-offset-4 hover:underline">
+          {t('book.calendly')} →
+        </a>
+      </div>
+    )}
+  </div>
+
+  <div data-booking-done class="min-h-[420px] flex-col items-center justify-center text-center hidden">
+    <div class="w-14 h-14 rounded-full bg-ocean-700/10 text-ocean-700 grid place-items-center">
+      <Icon name="check" class="w-7 h-7" />
+    </div>
+    <h3 class="font-display text-3xl mt-5">Thank you<span data-booking-done-name></span>.</h3>
+    <p class="mt-3 text-ink-mute max-w-sm">{t('book.done')}</p>
+    <p class="mt-1 text-ink-mute text-sm" data-booking-done-summary></p>
+    <button
+      type="button"
+      data-booking-reset
+      class="mt-8 text-[12px] tracking-eyebrow uppercase text-ocean-700"
+    >Make another enquiry</button>
+  </div>
+</form>
+
+<script is:inline define:vars={{ labels: { nights: t('book.nights'), sending: t('book.sending'), submit: t('book.submit') } }}>
+  (() => {
+    const form = document.getElementById('booking-form');
+    if (!form) return;
+    const rate = Number(form.dataset.rate || 8500);
+    const fields = form.querySelector('[data-booking-fields]');
+    const done = form.querySelector('[data-booking-done]');
+    const summary = form.querySelector('[data-booking-summary]');
+    const submitBtn = form.querySelector('[data-booking-submit]');
+    const submitLbl = form.querySelector('[data-booking-submit-label]');
+    const checkin = form.querySelector('input[name=checkin]');
+    const checkout = form.querySelector('input[name=checkout]');
+
+    const today = new Date();
+    const plus = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+    checkin.value = plus(today, 0);
+    checkout.value = plus(today, 4);
+    checkin.min = plus(today, 0);
+    checkout.min = plus(today, 1);
+
+    const fmt = (n) => '฿' + n.toLocaleString();
+    const recalc = () => {
+      const a = new Date(checkin.value);
+      const b = new Date(checkout.value);
+      const n = Math.max(0, Math.round((b - a) / 86400000));
+      const total = n * rate;
+      summary.innerHTML = n > 0
+        ? `<span>${n} ${labels.nights} · <span class="text-ink">${fmt(total)}</span></span>`
+        : '<span>Pick your dates to see total</span>';
+      submitBtn.disabled = n < 1;
+    };
+    checkin.addEventListener('change', () => {
+      if (new Date(checkout.value) <= new Date(checkin.value)) checkout.value = plus(checkin.value, 1);
+      checkout.min = plus(checkin.value, 1);
+      recalc();
+    });
+    checkout.addEventListener('change', recalc);
+    recalc();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitLbl.textContent = labels.sending;
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        // We don't fail loud on the user — if server responds 2xx, show success.
+        // Logs/notifications are handled server-side.
+        if (!res.ok) throw new Error(String(res.status));
+        showDone(data);
+      } catch (err) {
+        // Fallback: open mailto so the enquiry still reaches the owner.
+        const subject = encodeURIComponent('Villa Solana — enquiry');
+        const body = encodeURIComponent(
+          `Name: ${data.name}\nEmail: ${data.email}\nWhatsApp: +${data.whatsapp || '-'}\n` +
+          `Check-in: ${data.checkin}\nCheck-out: ${data.checkout}\nGuests: ${data.guests}\n\nNotes:\n${data.notes || '-'}`
+        );
+        window.location.href = `mailto:stay@villasolana.example?subject=${subject}&body=${body}`;
+        submitBtn.disabled = false;
+        submitLbl.textContent = labels.submit;
+      }
+    });
+
+    function showDone(data) {
+      fields.classList.add('hidden');
+      done.classList.remove('hidden');
+      done.classList.add('flex');
+      const nameEl = done.querySelector('[data-booking-done-name]');
+      if (nameEl && data.name) nameEl.textContent = ', ' + data.name;
+      const sumEl = done.querySelector('[data-booking-done-summary]');
+      if (sumEl) {
+        const a = new Date(data.checkin), b = new Date(data.checkout);
+        const n = Math.max(0, Math.round((b - a) / 86400000));
+        sumEl.textContent = `${data.checkin} → ${data.checkout} · ${data.guests} guest${data.guests > 1 ? 's' : ''} · ${fmt(n * rate)}`;
+      }
+    }
+
+    form.querySelector('[data-booking-reset]')?.addEventListener('click', () => {
+      done.classList.add('hidden'); done.classList.remove('flex');
+      fields.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitLbl.textContent = labels.submit;
+      form.reset();
+      checkin.value = plus(new Date(), 0);
+      checkout.value = plus(new Date(), 4);
+      recalc();
+    });
+  })();
+</script>

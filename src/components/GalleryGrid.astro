@@ -1,0 +1,130 @@
+---
+import Icon from './Icon.astro';
+
+interface GalleryItem {
+  src: string;
+  label: string;
+  alt?: string;
+}
+
+interface Props {
+  items: GalleryItem[];
+  /**
+   * Layout — 'mosaic' uses the magazine-style tile grid (best with 6 items),
+   * 'even' renders a uniform 3-column grid.
+   */
+  layout?: 'mosaic' | 'even';
+}
+
+const { items, layout = 'mosaic' } = Astro.props;
+---
+
+<div class={layout === 'mosaic' ? 'grid grid-cols-2 md:grid-cols-12 gap-3' : 'grid grid-cols-2 md:grid-cols-3 gap-3'}>
+  {items.map((item, idx) => {
+    const span = layout === 'mosaic'
+      ? (idx === 0 ? 'col-span-2 md:col-span-7 aspect-[16/11]'
+        : idx === 1 ? 'md:col-span-5 aspect-[4/3] md:aspect-auto'
+        : idx === 5 ? 'col-span-2 md:col-span-12 aspect-[16/7]'
+        : 'md:col-span-4 aspect-[4/3]')
+      : 'aspect-[4/3]';
+    return (
+      <button
+        type="button"
+        data-gallery-tile
+        data-index={idx}
+        class={`relative ${span} overflow-hidden rounded-xl group focus:outline-none focus:ring-2 focus:ring-ocean-400 focus:ring-offset-2 focus:ring-offset-cream-50`}
+        aria-label={`Open ${item.label}`}
+      >
+        <img
+          src={item.src}
+          alt={item.alt ?? item.label}
+          loading="lazy"
+          decoding="async"
+          class="w-full h-full object-cover gallery-tile"
+        />
+        <span class="absolute inset-0 bg-gradient-to-t from-ocean-800/55 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-4">
+          <span class="text-cream-50 text-[13px] tracking-wide">{item.label}</span>
+        </span>
+      </button>
+    );
+  })}
+</div>
+
+{/* Lightbox container — populated by tiny JS below */}
+<div
+  id="gallery-lightbox"
+  class="fixed inset-0 z-50 bg-ocean-800/90 backdrop-blur-sm items-center justify-center p-4 hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Gallery viewer"
+>
+  <button
+    type="button"
+    data-gallery-close
+    class="absolute top-5 right-5 text-cream-50 p-2"
+    aria-label="Close"
+  >
+    <Icon name="close" class="w-6 h-6" />
+  </button>
+  <button
+    type="button"
+    data-gallery-prev
+    class="absolute left-3 sm:left-6 text-cream-50 p-3 rotate-180"
+    aria-label="Previous"
+  >
+    <Icon name="arrow" class="w-6 h-6" />
+  </button>
+  <img
+    id="gallery-lightbox-img"
+    alt=""
+    class="max-h-[82vh] max-w-[92vw] object-contain rounded-lg shadow-2xl"
+  />
+  <button
+    type="button"
+    data-gallery-next
+    class="absolute right-3 sm:right-6 text-cream-50 p-3"
+    aria-label="Next"
+  >
+    <Icon name="arrow" class="w-6 h-6" />
+  </button>
+  <div
+    id="gallery-lightbox-caption"
+    class="absolute bottom-5 left-0 right-0 text-center text-cream-100/85 text-sm tracking-wide"
+  ></div>
+</div>
+
+<script is:inline define:vars={{ items }}>
+  (() => {
+    const root = document.getElementById('gallery-lightbox');
+    if (!root) return;
+    const img = document.getElementById('gallery-lightbox-img');
+    const cap = document.getElementById('gallery-lightbox-caption');
+    let active = null;
+
+    const show = () => { root.classList.remove('hidden'); root.classList.add('flex'); document.body.style.overflow = 'hidden'; };
+    const hide = () => { root.classList.add('hidden'); root.classList.remove('flex'); document.body.style.overflow = ''; active = null; };
+    const render = () => {
+      if (active == null) return;
+      const it = items[active];
+      img.src = it.src;
+      img.alt = it.alt ?? it.label;
+      cap.textContent = `${it.label} · ${active + 1} / ${items.length}`;
+    };
+    const open = (i) => { active = i; render(); show(); };
+    const step = (d) => { if (active == null) return; active = (active + d + items.length) % items.length; render(); };
+
+    document.querySelectorAll('[data-gallery-tile]').forEach((btn) => {
+      btn.addEventListener('click', () => open(Number(btn.dataset.index)));
+    });
+    root.querySelector('[data-gallery-close]').addEventListener('click', hide);
+    root.querySelector('[data-gallery-prev]').addEventListener('click', () => step(-1));
+    root.querySelector('[data-gallery-next]').addEventListener('click', () => step(1));
+    root.addEventListener('click', (e) => { if (e.target === root) hide(); });
+    document.addEventListener('keydown', (e) => {
+      if (root.classList.contains('hidden')) return;
+      if (e.key === 'Escape') hide();
+      if (e.key === 'ArrowRight') step(1);
+      if (e.key === 'ArrowLeft') step(-1);
+    });
+  })();
+</script>

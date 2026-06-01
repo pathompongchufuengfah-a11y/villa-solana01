@@ -1,0 +1,32 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  sub?: string;
+  align?: 'left' | 'center';
+  tone?: 'ink' | 'light';
+  class?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  sub,
+  align = 'left',
+  tone = 'ink',
+  class: className = '',
+} = Astro.props;
+
+const alignCls = align === 'center' ? 'text-center mx-auto' : '';
+const eyebrowCls = tone === 'light' ? 'text-ocean-200' : 'text-ocean-700';
+const titleCls = tone === 'light' ? 'text-cream-50' : 'text-ink';
+const subCls = tone === 'light' ? 'text-cream-100/80' : 'text-ink-mute';
+---
+
+<div class={`max-w-2xl ${alignCls} ${className}`}>
+  {eyebrow && (
+    <div class={`text-[11px] tracking-eyebrow uppercase mb-4 ${eyebrowCls}`}>{eyebrow}</div>
+  )}
+  <h2 class={`font-display text-4xl sm:text-5xl leading-[1.05] ${titleCls}`} set:html={title.replace(/\n/g, '<br/>')} />
+  {sub && <p class={`mt-5 leading-relaxed ${subCls}`}>{sub}</p>}
+</div>

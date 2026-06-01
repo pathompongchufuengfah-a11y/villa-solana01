@@ -1,0 +1,161 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import Hero from '@components/Hero.astro';
+import SectionHeading from '@components/SectionHeading.astro';
+import AmenityCard from '@components/AmenityCard.astro';
+import GalleryGrid from '@components/GalleryGrid.astro';
+import Icon from '@components/Icon.astro';
+import { useT, getLangFromUrl, localizedHref } from '@i18n/utils';
+import { ui } from '@i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useT(lang);
+
+const amenities = t<typeof ui.en.amen.items>('amen.items');
+const why = t<typeof ui.en.why.items>('why.items');
+const compare = t<typeof ui.en.why.compare>('why.compare');
+const nearby = t<typeof ui.en.location.nearby>('location.nearby');
+
+const galleryItems = [
+  { src: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1400&q=80', label: 'Living pavilion' },
+  { src: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1400&q=80', label: 'Master bedroom' },
+  { src: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=80', label: 'Pool deck, dusk' },
+  { src: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1400&q=80', label: 'Open kitchen' },
+  { src: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1400&q=80', label: 'Garden & sala' },
+  { src: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1400&q=80', label: 'Outdoor shower' },
+];
+---
+
+<BaseLayout
+  title="Villa Solana Phuket — Private Pool Villa in Chalong"
+  description="A quiet three-bedroom pool villa in Chalong, Phuket. Stay direct and save 15% vs OTAs."
+>
+  <Hero lang={lang} />
+
+  {/* Why direct */}
+  <section id="why" class="reveal py-24 sm:py-32 bg-cream-50">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="grid md:grid-cols-12 gap-10 md:gap-14">
+        <div class="md:col-span-4">
+          <SectionHeading eyebrow={t('why.eyebrow')} title={t('why.title')} />
+          <div class="mt-8 hidden md:flex items-center gap-3 text-ink-mute text-sm">
+            <span class="w-10 h-px bg-ink/20"></span>
+            <span>{t('why.since')}</span>
+          </div>
+        </div>
+        <div class="stagger md:col-span-8 grid sm:grid-cols-3 gap-px bg-ink/10 rounded-2xl overflow-hidden border hairline">
+          {why.map((it) => (
+            <div class="bg-cream-50 p-7 sm:p-8 flex flex-col transition-colors hover:bg-cream-100/40">
+              <div class="font-display text-ocean-700 text-2xl mb-6">{it.k}</div>
+              <div class="font-display text-2xl text-ink leading-snug">{it.t}</div>
+              <p class="mt-3 text-ink-mute text-[14.5px] leading-relaxed">{it.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="stagger mt-14 grid sm:grid-cols-3 gap-3">
+        {compare.map((p) => (
+          <div class={`lift rounded-xl px-5 py-4 flex items-center justify-between ${p.accent ? 'bg-ocean-700 text-cream-50' : 'bg-cream-100 text-ink'}`}>
+            <div>
+              <div class={`text-[11px] tracking-eyebrow uppercase ${p.accent ? 'text-cream-100/80' : 'text-ink-mute'}`}>{p.label}</div>
+              <div class="font-display text-2xl mt-0.5">{p.price}</div>
+            </div>
+            <div class={`text-[12px] ${p.accent ? 'text-cream-100/80' : 'text-ink-mute'}`}>{p.tag}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* Amenities */}
+  <section id="amenities" class="reveal py-24 sm:py-32 bg-cream-100/60">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <SectionHeading eyebrow={t('amen.eyebrow')} title={t('amen.title')} />
+      <div class="stagger mt-12 grid grid-cols-2 md:grid-cols-3 gap-px bg-ink/10 rounded-2xl overflow-hidden border hairline">
+        {amenities.map((a) => (
+          <AmenityCard icon={a.i as any} title={a.t} description={a.d} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* Gallery */}
+  <section id="gallery" class="reveal py-24 sm:py-32 bg-cream-50">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="flex items-end justify-between flex-wrap gap-4 mb-10">
+        <SectionHeading eyebrow={t('gallery.eyebrow')} title={t('gallery.title')} />
+        <div class="text-ink-mute text-sm">{t('gallery.tap')}</div>
+      </div>
+      <GalleryGrid items={galleryItems} layout="mosaic" />
+    </div>
+  </section>
+
+  {/* Location preview */}
+  <section id="location" class="reveal py-24 sm:py-32 bg-cream-100/60">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 grid lg:grid-cols-12 gap-10">
+      <div class="lg:col-span-5">
+        <SectionHeading
+          eyebrow={t('location.eyebrow')}
+          title={t('location.title')}
+          sub={t('location.sub')}
+        />
+        <ul class="mt-9 divide-y hairline border-y hairline">
+          {nearby.map((n) => (
+            <li class="flex items-center justify-between py-3.5">
+              <div class="flex items-center gap-3">
+                <Icon name="pin" class="w-4 h-4 text-ocean-700" />
+                <span class="text-ink text-[15px]">{n.t}</span>
+              </div>
+              <span class="text-ink-mute text-[13px] tracking-wide">{n.m}</span>
+            </li>
+          ))}
+        </ul>
+        <a
+          href={localizedHref('/location', lang)}
+          class="mt-8 inline-flex items-center gap-2 text-[13px] tracking-wide text-ocean-700 hover:text-ocean-800"
+        >
+          {t('location.fullMap')} <Icon name="arrow" class="w-3.5 h-3.5" />
+        </a>
+      </div>
+
+      <div class="lg:col-span-7">
+        <div class="relative aspect-[5/4] sm:aspect-[16/11] rounded-2xl overflow-hidden border hairline map-bg">
+          <div class="absolute" style="left:52%; top:46%">
+            <div class="relative -translate-x-1/2 -translate-y-full">
+              <div class="absolute -inset-3 rounded-full bg-ocean-700/20 animate-ping"></div>
+              <div class="relative w-10 h-10 rounded-full bg-ocean-700 text-cream-50 grid place-items-center shadow-soft">
+                <Icon name="pin" class="w-5 h-5" />
+              </div>
+            </div>
+            <div class="absolute left-6 top-1 text-[11px] tracking-eyebrow uppercase bg-cream-50 px-2 py-1 rounded shadow-soft whitespace-nowrap">Villa Solana</div>
+          </div>
+          <div class="absolute bottom-3 right-3 text-[10px] tracking-eyebrow uppercase text-ink-mute bg-cream-50/80 backdrop-blur px-2 py-1 rounded">{t('location.preview')}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* Booking CTA */}
+  <section id="book" class="reveal gradient-pan py-24 sm:py-32 text-cream-50">
+    <div class="max-w-3xl mx-auto px-5 sm:px-8 text-center">
+      <SectionHeading
+        eyebrow={t('book.eyebrow')}
+        title={t('book.title')}
+        sub={t('book.sub')}
+        align="center"
+        tone="light"
+        class="mx-auto"
+      />
+      <a
+        href={localizedHref('/booking', lang)}
+        class="mt-10 inline-flex items-center gap-2.5 bg-cream-50 text-ocean-800 hover:bg-white pl-6 pr-5 py-3.5 rounded-full text-[14px] tracking-wide transition group"
+      >
+        {t('hero.cta')}
+        <span class="w-7 h-7 rounded-full bg-ocean-700 text-cream-50 grid place-items-center group-hover:translate-x-0.5 transition">
+          <Icon name="arrow" class="w-3.5 h-3.5" />
+        </span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,83 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+
+const configured = !!import.meta.env.ADMIN_PASSWORD && !!import.meta.env.ADMIN_SESSION_SECRET;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Admin · Villa Solana</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500&display=swap" />
+  </head>
+  <body class="bg-cream-50 text-ink min-h-screen grid place-items-center px-5">
+    <div class="w-full max-w-sm">
+      <div class="flex items-center gap-2.5 justify-center mb-8">
+        <span class="w-8 h-8 rounded-full bg-ocean-700 text-cream-50 grid place-items-center font-display text-[16px]">S</span>
+        <span class="font-display text-2xl">Villa Solana</span>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-soft border hairline p-7">
+        <h1 class="font-display text-2xl">Admin sign in</h1>
+        <p class="text-ink-mute text-sm mt-1">Manage the booking queue.</p>
+
+        {!configured && (
+          <p class="mt-4 text-[13px] bg-amber-50 text-amber-800 border border-amber-200 rounded-lg p-3">
+            Set <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code> in your environment, then restart.
+          </p>
+        )}
+
+        <form id="login-form" class="mt-6">
+          <label class="label" for="pw">Password</label>
+          <input id="pw" name="password" type="password" class="field" autocomplete="current-password" required autofocus />
+          <p id="login-error" class="text-[13px] text-red-600 mt-2 hidden">Wrong password. Try again.</p>
+          <button
+            type="submit"
+            class="mt-5 w-full inline-flex items-center justify-center gap-2 bg-ocean-700 hover:bg-ocean-800 text-cream-50 py-3 rounded-full text-[14px] tracking-wide transition disabled:opacity-50"
+          >
+            <span data-label>Sign in</span>
+          </button>
+        </form>
+      </div>
+
+      <p class="text-center text-ink-mute/70 text-[12px] mt-5">
+        <a href="/" class="hover:text-ink">← Back to site</a>
+      </p>
+    </div>
+
+    <script is:inline>
+      const form = document.getElementById('login-form');
+      const err = document.getElementById('login-error');
+      const label = form.querySelector('[data-label]');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        err.classList.add('hidden');
+        label.textContent = 'Signing in…';
+        const password = form.password.value;
+        try {
+          const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password }),
+          });
+          if (res.ok) {
+            window.location.href = '/admin';
+            return;
+          }
+          err.classList.remove('hidden');
+        } catch {
+          err.classList.remove('hidden');
+        }
+        label.textContent = 'Sign in';
+      });
+    </script>
+  </body>
+</html>
