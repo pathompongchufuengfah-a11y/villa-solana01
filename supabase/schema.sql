@@ -7,6 +7,8 @@ create table if not exists public.bookings (
   name        text not null,
   email       text not null,
   whatsapp    text,
+  line        text,
+  facebook    text,
   checkin     date not null,
   checkout    date not null,
   guests      int  not null default 2,

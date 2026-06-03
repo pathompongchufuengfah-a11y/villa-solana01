@@ -10,6 +10,8 @@ export interface Booking {
   name: string;
   email: string;
   whatsapp: string | null;
+  line: string | null;
+  facebook: string | null;
   checkin: string;
   checkout: string;
   guests: number;

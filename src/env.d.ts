@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_CALENDLY_URL?: string;
   readonly PUBLIC_WHATSAPP_NUMBER?: string;
   readonly PUBLIC_LINE_ID?: string;
+  readonly PUBLIC_FACEBOOK_URL?: string;
   readonly PUBLIC_GMAPS_EMBED_URL?: string;
 }
 

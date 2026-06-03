@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     case 'update': {
       // Whitelist the fields an admin may edit.
-      const allowed = ['name', 'email', 'whatsapp', 'checkin', 'checkout', 'guests', 'notes', 'total', 'status'];
+      const allowed = ['name', 'email', 'whatsapp', 'line', 'facebook', 'checkin', 'checkout', 'guests', 'notes', 'total', 'status'];
       const patch: Record<string, unknown> = {};
       for (const k of allowed) if (k in body) patch[k] = body[k];
       if (patch.status && !VALID_STATUS.includes(patch.status as BookingStatus)) {

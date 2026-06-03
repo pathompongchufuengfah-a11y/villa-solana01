@@ -66,6 +66,18 @@ const calendly = import.meta.env.PUBLIC_CALENDLY_URL;
       </div>
     </div>
 
+    <div class="grid sm:grid-cols-2 gap-4 mt-4">
+      <div>
+        <label class="label" for="bf-line">{t('book.line')}</label>
+        <input id="bf-line" name="line" class="field" placeholder="@yourline / LINE ID" />
+      </div>
+      <div>
+        <label class="label" for="bf-facebook">{t('book.facebook')}</label>
+        <input id="bf-facebook" name="facebook" class="field" placeholder="facebook.com/you" />
+      </div>
+    </div>
+    <p class="text-[12px] text-ink-mute mt-2">{t('book.contactHint')}</p>
+
     <div class="mt-4">
       <label class="label" for="bf-notes">{t('book.notes')}</label>
       <textarea id="bf-notes" name="notes" class="field min-h-[88px] resize-y" placeholder="Airport pickup, dietary needs, anniversary, etc."></textarea>
@@ -175,6 +187,7 @@ const calendly = import.meta.env.PUBLIC_CALENDLY_URL;
         const subject = encodeURIComponent('Villa Solana — enquiry');
         const body = encodeURIComponent(
           `Name: ${data.name}\nEmail: ${data.email}\nWhatsApp: +${data.whatsapp || '-'}\n` +
+          `LINE: ${data.line || '-'}\nFacebook: ${data.facebook || '-'}\n` +
           `Check-in: ${data.checkin}\nCheck-out: ${data.checkout}\nGuests: ${data.guests}\n\nNotes:\n${data.notes || '-'}`
         );
         window.location.href = `mailto:stay@villasolana.example?subject=${subject}&body=${body}`;

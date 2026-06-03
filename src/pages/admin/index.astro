@@ -134,7 +134,9 @@ const fmtMoney = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleSt
                         <td class="py-4 px-4">
                           <div class="font-medium">{b.name}</div>
                           <div class="text-ink-mute text-[12.5px]">{b.email}</div>
-                          {b.whatsapp && <div class="text-ink-mute text-[12.5px]">+{b.whatsapp}</div>}
+                          {b.whatsapp && <div class="text-ink-mute text-[12.5px]">WA +{b.whatsapp}</div>}
+                          {b.line && <div class="text-ink-mute text-[12.5px]">LINE {b.line}</div>}
+                          {b.facebook && <div class="text-ink-mute text-[12.5px]">FB {b.facebook}</div>}
                           {b.notes && <div class="text-ink-mute text-[12px] mt-1 max-w-xs italic">“{b.notes}”</div>}
                         </td>
                         <td class="py-4 px-4 whitespace-nowrap">
@@ -161,7 +163,7 @@ const fmtMoney = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleSt
                             <button
                               data-act="edit"
                               data-id={b.id}
-                              data-json={JSON.stringify({ name: b.name, email: b.email, whatsapp: b.whatsapp ?? '', checkin: b.checkin, checkout: b.checkout, guests: b.guests, total: b.total ?? '', notes: b.notes ?? '' })}
+                              data-json={JSON.stringify({ name: b.name, email: b.email, whatsapp: b.whatsapp ?? '', line: b.line ?? '', facebook: b.facebook ?? '', checkin: b.checkin, checkout: b.checkout, guests: b.guests, total: b.total ?? '', notes: b.notes ?? '' })}
                               class="text-[12px] px-2.5 py-1.5 rounded-md border hairline hover:bg-cream-100"
                             >Edit</button>
                             <button data-act="delete" data-id={b.id} class="text-[12px] px-2.5 py-1.5 rounded-md text-ink-mute hover:text-red-700">Delete</button>
@@ -187,6 +189,8 @@ const fmtMoney = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleSt
           <div class="col-span-2"><label class="label">Name</label><input name="name" class="field" required /></div>
           <div class="col-span-2"><label class="label">Email</label><input name="email" type="email" class="field" required /></div>
           <div class="col-span-2"><label class="label">WhatsApp</label><input name="whatsapp" class="field" /></div>
+          <div><label class="label">LINE ID</label><input name="line" class="field" /></div>
+          <div><label class="label">Facebook</label><input name="facebook" class="field" /></div>
           <div><label class="label">Check in</label><input name="checkin" type="date" class="field" required /></div>
           <div><label class="label">Check out</label><input name="checkout" type="date" class="field" required /></div>
           <div><label class="label">Guests</label><input name="guests" type="number" min="1" max="12" class="field" /></div>
@@ -235,7 +239,7 @@ const fmtMoney = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleSt
         if (act === 'edit') {
           const data = JSON.parse(btn.dataset.json);
           editForm.id.value = id;
-          for (const k of ['name', 'email', 'whatsapp', 'checkin', 'checkout', 'guests', 'total', 'notes']) {
+          for (const k of ['name', 'email', 'whatsapp', 'line', 'facebook', 'checkin', 'checkout', 'guests', 'total', 'notes']) {
             if (editForm[k]) editForm[k].value = data[k] ?? '';
           }
           dialog.showModal();
@@ -248,7 +252,7 @@ const fmtMoney = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleSt
         e.preventDefault();
         const fd = new FormData(editForm);
         const payload = { action: 'update', id: fd.get('id') };
-        for (const k of ['name', 'email', 'whatsapp', 'checkin', 'checkout', 'notes']) payload[k] = fd.get(k);
+        for (const k of ['name', 'email', 'whatsapp', 'line', 'facebook', 'checkin', 'checkout', 'notes']) payload[k] = fd.get(k);
         payload.guests = Number(fd.get('guests')) || 1;
         const total = fd.get('total');
         payload.total = total === '' ? null : Number(total);

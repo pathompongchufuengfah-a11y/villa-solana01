@@ -17,6 +17,8 @@ interface BookingPayload {
   name?: string;
   email?: string;
   whatsapp?: string;
+  line?: string;
+  facebook?: string;
   checkin?: string;
   checkout?: string;
   guests?: string | number;
@@ -46,6 +48,8 @@ function formatMessage(p: BookingPayload): string {
     `Name:     ${p.name ?? '-'}`,
     `Email:    ${p.email ?? '-'}`,
     `WhatsApp: +${p.whatsapp ?? '-'}`,
+    `LINE:     ${p.line ?? '-'}`,
+    `Facebook: ${p.facebook ?? '-'}`,
     `Guests:   ${p.guests ?? '-'}`,
     `Check-in: ${p.checkin ?? '-'}`,
     `Check-out:${p.checkout ?? '-'}`,
@@ -133,6 +137,8 @@ export const POST: APIRoute = async ({ request }) => {
       name: payload.name,
       email: payload.email,
       whatsapp: payload.whatsapp ?? null,
+      line: payload.line ?? null,
+      facebook: payload.facebook ?? null,
       checkin: payload.checkin,
       checkout: payload.checkout,
       guests: Number(payload.guests) || 2,
